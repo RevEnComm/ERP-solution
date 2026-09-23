@@ -19,6 +19,7 @@ class PermissionSeeder extends Seeder
             'shop' => ['view', 'add', 'update', 'delete'],
             'sales' => ['view', 'add', 'update', 'delete'],
             'expense' => ['view', 'add', 'update', 'delete'],
+            'report' => ['profit-loss'],
             'inventory' => ['view'],
             'role' => ['view', 'add', 'update', 'delete'],
             'user' => ['view', 'add', 'update'],

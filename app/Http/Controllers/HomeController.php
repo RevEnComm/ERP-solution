@@ -23,6 +23,7 @@ class HomeController extends Controller
         ['lift.view', 'lifts.report'],
         ['inventory.view', 'products.index'],
         ['expense.view', 'expenses.index'],
+        ['report.profit-loss', 'profit-loss.index'],
         ['supplier.view', 'suppliers.index'],
         ['supplier.add', 'suppliers.create'],
         ['deposit.view', 'deposits.index'],

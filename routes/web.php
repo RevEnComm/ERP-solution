@@ -108,7 +108,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('expenses/{id}/delete', [ExpenseController::class, 'destroy'])->middleware('permission:expense.delete')->name('expenses.destroy');
 
     // Profit & Loss Report
-    Route::get('profit-loss', [ProfitLossController::class, 'index'])->middleware('permission:sales.view')->name('profit-loss.index');
+    Route::get('profit-loss', [ProfitLossController::class, 'index'])->middleware('permission:report.profit-loss')->name('profit-loss.index');
 
     Route::get('roles', [RoleController::class, 'index'])->middleware('permission:role.view')->name('roles.index');
     Route::get('roles/create', [RoleController::class, 'create'])->middleware('permission:role.add')->name('roles.create');

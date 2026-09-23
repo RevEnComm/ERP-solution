@@ -254,7 +254,7 @@ const sections = computed(() =>
         {
             label: "Reports",
             items: visible([
-                { label: "Profit & Loss", href: "/profit-loss", icon: "fa-solid fa-chart-line", visible: hasPermission("sales.view") },
+                { label: "Profit & Loss", href: "/profit-loss", icon: "fa-solid fa-chart-line", visible: hasPermission("report.profit-loss") },
                 { label: "Expense Report", href: "/expenses/report", icon: "fa-solid fa-receipt", visible: hasPermission("expense.view") },
             ]),
         },

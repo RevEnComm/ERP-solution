@@ -1404,7 +1404,7 @@ function saleFixture(array $liftOverrides = []): array
     $liftUser = makeUser(['lift.add']);
     $saleUser = makeUser([
         'sales.add', 'sales.update', 'sales.view', 'sales.delete',
-        'dashboard.view', 'inventory.view', 'lift.view',
+        'dashboard.view', 'inventory.view', 'lift.view', 'report.profit-loss',
     ]);
     $shop     = makeShop();
 
@@ -2438,7 +2438,7 @@ function guardedPages(): array
         '/inventory/report' => 'inventory.view',
         '/expenses'         => 'expense.view',
         '/expenses/report'  => 'expense.view',
-        '/profit-loss'      => 'sales.view',
+        '/profit-loss'      => 'report.profit-loss',
         '/roles'            => 'role.view',
         '/users'            => 'user.view',
     ];
@@ -5052,4 +5052,15 @@ it('T200: an undated expense keeps showing the day it was recorded', function ()
 
     // Same day the old screen printed from created_at, so nothing moves on screen.
     expect($rows->every(fn ($r) => $r['effective_date'] === now()->toDateString()))->toBeTrue();
+});
+
+it('T201: sales access alone does not open the profit and loss page', function () {
+    seedAllPermissions();
+
+    $salesOnly = makeUser(['sales.view']);
+    $this->actingAs($salesOnly)->get(route('profit-loss.index'))->assertForbidden();
+
+    $profitLoss = makeUser(['report.profit-loss']);
+    $this->actingAs($profitLoss)->get(route('profit-loss.index'))->assertOk();
+    $this->actingAs($profitLoss)->get(route('home'))->assertRedirect(route('profit-loss.index', absolute: false));
 });
