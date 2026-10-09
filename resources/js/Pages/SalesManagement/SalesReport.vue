@@ -70,11 +70,11 @@
                     <span>{{ getTranslation("totalRevenue") }}</span>
                     <strong>৳{{ toBengaliNumber(formatCurrency(printTotals.revenue), 2) }}</strong>
                 </div>
-                <div class="sales-print-card">
+                <div v-if="canSeeProfit" class="sales-print-card">
                     <span>{{ getTranslation("totalCost") }}</span>
                     <strong>৳{{ toBengaliNumber(formatCurrency(printTotals.cost), 2) }}</strong>
                 </div>
-                <div class="sales-print-card">
+                <div v-if="canSeeProfit" class="sales-print-card">
                     <span>{{ getTranslation("totalProfit") }}</span>
                     <strong>৳{{ toBengaliNumber(formatCurrency(printTotals.profit), 2) }}</strong>
                 </div>
@@ -98,8 +98,8 @@
                         <th>{{ getTranslation("products") }}</th>
                         <th>{{ getTranslation("totalCases") }}</th>
                         <th>{{ getTranslation("totalRevenue") }}</th>
-                        <th>{{ getTranslation("totalCost") }}</th>
-                        <th>{{ getTranslation("totalProfit") }}</th>
+                        <th v-if="canSeeProfit">{{ getTranslation("totalCost") }}</th>
+                        <th v-if="canSeeProfit">{{ getTranslation("totalProfit") }}</th>
                         <th>{{ getTranslation("due") }}</th>
                         <th>{{ getTranslation("paymentStatus") }}</th>
                         <th>{{ getTranslation("items") }}</th>
@@ -117,8 +117,8 @@
                         <td>{{ getSaleProductNames(sale) }}</td>
                         <td>{{ toBengaliNumber(getSaleTotalCases(sale)) }}</td>
                         <td>৳{{ toBengaliNumber(formatCurrency(sale.total_amount), 2) }}</td>
-                        <td>৳{{ toBengaliNumber(formatCurrency(getSaleCost(sale)), 2) }}</td>
-                        <td>৳{{ toBengaliNumber(formatCurrency(sale.total_profit), 2) }}</td>
+                        <td v-if="canSeeProfit">৳{{ toBengaliNumber(formatCurrency(getSaleCost(sale)), 2) }}</td>
+                        <td v-if="canSeeProfit">৳{{ toBengaliNumber(formatCurrency(sale.total_profit), 2) }}</td>
                         <td>৳{{ toBengaliNumber(formatCurrency(saleDue(sale)), 2) }}</td>
                         <td>{{ paymentStateOf(sale) ? getTranslation(paymentStateOf(sale)!) : "—" }}</td>
                         <td>{{ toBengaliNumber(sale.items?.length || 0) }}</td>
@@ -130,8 +130,8 @@
                         <td>—</td>
                         <td>{{ toBengaliNumber(filteredSales.reduce((s, sale) => s + getSaleTotalCases(sale), 0)) }}</td>
                         <td>৳{{ toBengaliNumber(formatCurrency(printTotals.revenue), 2) }}</td>
-                        <td>৳{{ toBengaliNumber(formatCurrency(printTotals.cost), 2) }}</td>
-                        <td>৳{{ toBengaliNumber(formatCurrency(printTotals.profit), 2) }}</td>
+                        <td v-if="canSeeProfit">৳{{ toBengaliNumber(formatCurrency(printTotals.cost), 2) }}</td>
+                        <td v-if="canSeeProfit">৳{{ toBengaliNumber(formatCurrency(printTotals.profit), 2) }}</td>
                         <td>৳{{ toBengaliNumber(formatCurrency(printTotals.due), 2) }}</td>
                         <td>—</td>
                         <td>{{ toBengaliNumber(printTotals.items) }}</td>
@@ -148,7 +148,7 @@
                         <th>{{ getTranslation("totalCases") }}</th>
                         <th>{{ getTranslation("totalQty") }}</th>
                         <th>{{ getTranslation("totalRevenue") }}</th>
-                        <th>{{ getTranslation("totalProfit") }}</th>
+                        <th v-if="canSeeProfit">{{ getTranslation("totalProfit") }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -159,7 +159,7 @@
                         <td>{{ toBengaliNumber(row.total_cases) }}</td>
                         <td>{{ toBengaliNumber(row.total_qty) }}</td>
                         <td>৳{{ toBengaliNumber(formatCurrency(row.total_revenue), 2) }}</td>
-                        <td>৳{{ toBengaliNumber(formatCurrency(row.total_profit), 2) }}</td>
+                        <td v-if="canSeeProfit">৳{{ toBengaliNumber(formatCurrency(row.total_profit), 2) }}</td>
                     </tr>
                 </tbody>
                 <tfoot>
@@ -168,14 +168,18 @@
                         <td>{{ toBengaliNumber(productSummary.reduce((s, r) => s + r.total_cases, 0)) }}</td>
                         <td>{{ toBengaliNumber(productSummary.reduce((s, r) => s + r.total_qty, 0)) }}</td>
                         <td>৳{{ toBengaliNumber(formatCurrency(productSummary.reduce((s, r) => s + r.total_revenue, 0)), 2) }}</td>
-                        <td>৳{{ toBengaliNumber(formatCurrency(productSummary.reduce((s, r) => s + r.total_profit, 0)), 2) }}</td>
+                        <td v-if="canSeeProfit">৳{{ toBengaliNumber(formatCurrency(productSummary.reduce((s, r) => s + r.total_profit, 0)), 2) }}</td>
                     </tr>
                 </tfoot>
             </table>
         </section>
 
         <!-- Total Metrics -->
-        <div v-if="viewMode !== 'summary'" class="print:hidden grid grid-cols-4 gap-2 sm:gap-4 mb-4">
+        <div
+            v-if="viewMode !== 'summary'"
+            class="print:hidden grid gap-2 sm:gap-4 mb-4"
+            :class="canSeeProfit ? 'grid-cols-4' : 'grid-cols-3'"
+        >
             <div
                 class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-1.5 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-indigo-200 hover:shadow-md transition-shadow"
             >
@@ -236,7 +240,7 @@
                 </div>
             </div>
 
-            <div
+            <div v-if="canSeeProfit"
                 class="bg-gradient-to-br from-purple-50 to-purple-100 p-1.5 sm:p-4 lg:p-6 rounded-xl shadow-sm border border-purple-200 hover:shadow-md transition-shadow"
             >
                 <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-0">
@@ -657,11 +661,11 @@
                     <span>{{ getTranslation("totalRevenue") }}</span>
                     <strong>৳{{ toBengaliNumber(formatCurrency(printTotals.revenue), 2) }}</strong>
                 </div>
-                <div class="sales-summary-stat">
+                <div v-if="canSeeProfit" class="sales-summary-stat">
                     <span>{{ getTranslation("totalCost") }}</span>
                     <strong>৳{{ toBengaliNumber(formatCurrency(printTotals.cost), 2) }}</strong>
                 </div>
-                <div class="sales-summary-stat">
+                <div v-if="canSeeProfit" class="sales-summary-stat">
                     <span>{{ getTranslation("totalProfit") }}</span>
                     <strong>৳{{ toBengaliNumber(formatCurrency(printTotals.profit), 2) }}</strong>
                 </div>
@@ -681,8 +685,8 @@
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("supplier") }}</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("saleDate") }}</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("totalRevenue") }}</th>
-                            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("totalCost") }}</th>
-                            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("totalProfit") }}</th>
+                            <th v-if="canSeeProfit" class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("totalCost") }}</th>
+                            <th v-if="canSeeProfit" class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("totalProfit") }}</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("totalCases") }}</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("items") }}</th>
                         </tr>
@@ -699,8 +703,8 @@
                             <td class="px-4 py-3 text-sm text-slate-600">{{ sale.supplier_name || "-" }}</td>
                             <td class="px-4 py-3 text-sm text-slate-600">{{ formatDate(sale.sale_date) }}</td>
                             <td class="px-4 py-3 text-right text-sm font-semibold text-slate-800">৳{{ toBengaliNumber(formatCurrency(sale.total_amount), 2) }}</td>
-                            <td class="px-4 py-3 text-right text-sm text-slate-700">৳{{ toBengaliNumber(formatCurrency(getSaleCost(sale)), 2) }}</td>
-                            <td class="px-4 py-3 text-right text-sm font-semibold" :class="Number(sale.total_profit) >= 0 ? 'text-emerald-600' : 'text-red-600'">৳{{ toBengaliNumber(formatCurrency(sale.total_profit), 2) }}</td>
+                            <td v-if="canSeeProfit" class="px-4 py-3 text-right text-sm text-slate-700">৳{{ toBengaliNumber(formatCurrency(getSaleCost(sale)), 2) }}</td>
+                            <td v-if="canSeeProfit" class="px-4 py-3 text-right text-sm font-semibold" :class="Number(sale.total_profit) >= 0 ? 'text-emerald-600' : 'text-red-600'">৳{{ toBengaliNumber(formatCurrency(sale.total_profit), 2) }}</td>
                             <td class="px-4 py-3 text-right text-sm text-slate-700">{{ toBengaliNumber(sale.items?.reduce((s, item) => s + (item.cases_sold || 0), 0) || 0) }}</td>
                             <td class="px-4 py-3 text-right text-sm text-slate-700">{{ toBengaliNumber(sale.items?.reduce((s, item) => s + (item.total_bottles_sold || item.quantity || 0), 0) || 0) }}</td>
                         </tr>
@@ -709,8 +713,8 @@
                         <tr>
                             <td colspan="4" class="px-4 py-3 text-sm font-semibold text-slate-700">{{ getTranslation("total") }}</td>
                             <td class="px-4 py-3 text-right text-sm font-bold text-slate-900">৳{{ toBengaliNumber(formatCurrency(printTotals.revenue), 2) }}</td>
-                            <td class="px-4 py-3 text-right text-sm font-bold text-slate-900">৳{{ toBengaliNumber(formatCurrency(printTotals.cost), 2) }}</td>
-                            <td class="px-4 py-3 text-right text-sm font-bold" :class="printTotals.profit >= 0 ? 'text-emerald-700' : 'text-red-700'">৳{{ toBengaliNumber(formatCurrency(printTotals.profit), 2) }}</td>
+                            <td v-if="canSeeProfit" class="px-4 py-3 text-right text-sm font-bold text-slate-900">৳{{ toBengaliNumber(formatCurrency(printTotals.cost), 2) }}</td>
+                            <td v-if="canSeeProfit" class="px-4 py-3 text-right text-sm font-bold" :class="printTotals.profit >= 0 ? 'text-emerald-700' : 'text-red-700'">৳{{ toBengaliNumber(formatCurrency(printTotals.profit), 2) }}</td>
                             <td class="px-4 py-3 text-right text-sm font-bold text-slate-900">{{ toBengaliNumber(printTotals.cases) }}</td>
                             <td class="px-4 py-3 text-right text-sm font-bold text-slate-900">{{ toBengaliNumber(printTotals.items) }}</td>
                         </tr>
@@ -733,7 +737,7 @@
                         </div>
                         <div class="text-right flex-shrink-0">
                             <p class="text-xs font-bold text-slate-800">৳{{ toBengaliNumber(formatCurrency(sale.total_amount), 2) }}</p>
-                            <p class="text-[10px] font-semibold" :class="Number(sale.total_profit) >= 0 ? 'text-emerald-600' : 'text-red-600'">
+                            <p v-if="canSeeProfit" class="text-[10px] font-semibold" :class="Number(sale.total_profit) >= 0 ? 'text-emerald-600' : 'text-red-600'">
                                 ৳{{ toBengaliNumber(formatCurrency(sale.total_profit), 2) }}
                             </p>
                         </div>
@@ -747,7 +751,7 @@
                             <span class="text-slate-400">{{ getTranslation("saleDate") }}</span>
                             <span class="font-medium text-slate-700">{{ formatDate(sale.sale_date) }}</span>
                         </div>
-                        <div class="flex flex-col">
+                        <div v-if="canSeeProfit" class="flex flex-col">
                             <span class="text-slate-400">{{ getTranslation("totalCost") }}</span>
                             <span class="font-medium text-slate-700">৳{{ toBengaliNumber(formatCurrency(getSaleCost(sale)), 2) }}</span>
                         </div>
@@ -770,11 +774,11 @@
                             <span class="text-slate-400">{{ getTranslation("totalRevenue") }}</span>
                             <span class="font-bold text-slate-900">৳{{ toBengaliNumber(formatCurrency(printTotals.revenue), 2) }}</span>
                         </div>
-                        <div class="flex flex-col">
+                        <div v-if="canSeeProfit" class="flex flex-col">
                             <span class="text-slate-400">{{ getTranslation("totalCost") }}</span>
                             <span class="font-bold text-slate-900">৳{{ toBengaliNumber(formatCurrency(printTotals.cost), 2) }}</span>
                         </div>
-                        <div class="flex flex-col">
+                        <div v-if="canSeeProfit" class="flex flex-col">
                             <span class="text-slate-400">{{ getTranslation("totalProfit") }}</span>
                             <span class="font-bold" :class="printTotals.profit >= 0 ? 'text-emerald-700' : 'text-red-700'">৳{{ toBengaliNumber(formatCurrency(printTotals.profit), 2) }}</span>
                         </div>
@@ -802,7 +806,7 @@
                             <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("totalCases") }}</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("totalQty") }}</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("totalRevenue") }}</th>
-                            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("totalProfit") }}</th>
+                            <th v-if="canSeeProfit" class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{{ getTranslation("totalProfit") }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 bg-white">
@@ -813,7 +817,7 @@
                             <td class="px-4 py-3 text-right text-sm font-medium text-slate-700">{{ toBengaliNumber(row.total_cases) }}</td>
                             <td class="px-4 py-3 text-right text-sm font-medium text-slate-700">{{ toBengaliNumber(row.total_qty) }}</td>
                             <td class="px-4 py-3 text-right text-sm font-semibold text-slate-800">৳{{ toBengaliNumber(formatCurrency(row.total_revenue), 2) }}</td>
-                            <td class="px-4 py-3 text-right text-sm font-semibold" :class="row.total_profit >= 0 ? 'text-emerald-600' : 'text-red-600'">৳{{ toBengaliNumber(formatCurrency(row.total_profit), 2) }}</td>
+                            <td v-if="canSeeProfit" class="px-4 py-3 text-right text-sm font-semibold" :class="row.total_profit >= 0 ? 'text-emerald-600' : 'text-red-600'">৳{{ toBengaliNumber(formatCurrency(row.total_profit), 2) }}</td>
                         </tr>
                     </tbody>
                     <tfoot class="bg-slate-50">
@@ -822,7 +826,7 @@
                             <td class="px-4 py-3 text-right text-sm font-bold text-slate-900">{{ toBengaliNumber(productSummary.reduce((s, r) => s + r.total_cases, 0)) }}</td>
                             <td class="px-4 py-3 text-right text-sm font-bold text-slate-900">{{ toBengaliNumber(productSummary.reduce((s, r) => s + r.total_qty, 0)) }}</td>
                             <td class="px-4 py-3 text-right text-sm font-bold text-slate-900">৳{{ toBengaliNumber(formatCurrency(productSummary.reduce((s, r) => s + r.total_revenue, 0)), 2) }}</td>
-                            <td class="px-4 py-3 text-right text-sm font-bold" :class="productSummary.reduce((s, r) => s + r.total_profit, 0) >= 0 ? 'text-emerald-700' : 'text-red-700'">৳{{ toBengaliNumber(formatCurrency(productSummary.reduce((s, r) => s + r.total_profit, 0)), 2) }}</td>
+                            <td v-if="canSeeProfit" class="px-4 py-3 text-right text-sm font-bold" :class="productSummary.reduce((s, r) => s + r.total_profit, 0) >= 0 ? 'text-emerald-700' : 'text-red-700'">৳{{ toBengaliNumber(formatCurrency(productSummary.reduce((s, r) => s + r.total_profit, 0)), 2) }}</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -848,7 +852,7 @@
                         </div>
                         <div class="text-right flex-shrink-0">
                             <p class="text-xs font-bold text-slate-800">৳{{ toBengaliNumber(formatCurrency(row.total_revenue), 2) }}</p>
-                            <p class="text-[10px] font-semibold" :class="row.total_profit >= 0 ? 'text-emerald-600' : 'text-red-600'">
+                            <p v-if="canSeeProfit" class="text-[10px] font-semibold" :class="row.total_profit >= 0 ? 'text-emerald-600' : 'text-red-600'">
                                 ৳{{ toBengaliNumber(formatCurrency(row.total_profit), 2) }}
                             </p>
                         </div>
@@ -881,7 +885,7 @@
                             <span class="text-slate-400">{{ getTranslation("totalRevenue") }}</span>
                             <span class="font-bold text-slate-900">৳{{ toBengaliNumber(formatCurrency(productSummary.reduce((s, r) => s + r.total_revenue, 0)), 2) }}</span>
                         </div>
-                        <div class="flex flex-col">
+                        <div v-if="canSeeProfit" class="flex flex-col">
                             <span class="text-slate-400">{{ getTranslation("totalProfit") }}</span>
                             <span class="font-bold" :class="productSummary.reduce((s, r) => s + r.total_profit, 0) >= 0 ? 'text-emerald-700' : 'text-red-700'">৳{{ toBengaliNumber(formatCurrency(productSummary.reduce((s, r) => s + r.total_profit, 0)), 2) }}</span>
                         </div>
@@ -918,7 +922,7 @@
                             >
                                 {{ getTranslation("due") }}
                             </th>
-                            <th
+                            <th v-if="canSeeProfit"
                                 class="px-3 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell"
                             >
                                 {{ getTranslation("totalProfit") }}
@@ -1003,7 +1007,7 @@
                                                     <span class="text-sm font-bold text-gray-800">
                                                         ৳{{ toBengaliNumber(formatCurrency(sale.total_amount), 2) }}
                                                     </span>
-                                                    <span
+                                                    <span v-if="canSeeProfit"
                                                         class="text-xs font-semibold"
                                                         :class="Number(sale.total_profit) >= 0 ? 'text-green-600' : 'text-red-600'"
                                                     >
@@ -1066,7 +1070,7 @@
                                         ৳{{ toBengaliNumber(formatCurrency(saleDue(sale)), 2) }}
                                     </div>
                                 </td>
-                                <td
+                                <td v-if="canSeeProfit"
                                     class="px-3 py-4 text-sm hidden md:table-cell"
                                     :class="
                                         Number(sale.total_profit) >= 0
@@ -1254,7 +1258,7 @@
                                                             {{ getTranslation("totalPrice") }}
                                                             <span class="font-bold text-gray-900">৳{{ toBengaliNumber(formatCurrency(item.total_price)) }}</span>
                                                         </span>
-                                                        <span>
+                                                        <span v-if="canSeeProfit">
                                                             {{ getTranslation("profit") }}
                                                             <span
                                                                 class="font-bold"
@@ -1358,7 +1362,7 @@
                                                                     )
                                                                 }}
                                                             </th>
-                                                            <th
+                                                            <th v-if="canSeeProfit"
                                                                 class="w-1/6 px-4 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider"
                                                             >
                                                                 {{
@@ -1506,7 +1510,7 @@
                                                                     }}
                                                                 </span>
                                                             </td>
-                                                            <td
+                                                            <td v-if="canSeeProfit"
                                                                 class="px-4 py-4 text-right"
                                                             >
                                                                 <span
@@ -1574,7 +1578,7 @@
                             <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ getTranslation("totalCases") }}</th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ getTranslation("totalQty") }}</th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ getTranslation("totalRevenue") }}</th>
-                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ getTranslation("totalProfit") }}</th>
+                            <th v-if="canSeeProfit" class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ getTranslation("totalProfit") }}</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-100">
@@ -1594,7 +1598,7 @@
                             <td class="px-4 py-3 text-sm text-right font-semibold text-gray-800">
                                 ৳{{ toBengaliNumber(formatCurrency(row.total_revenue), 2) }}
                             </td>
-                            <td
+                            <td v-if="canSeeProfit"
                                 class="px-4 py-3 text-sm text-right font-semibold"
                                 :class="row.total_profit >= 0 ? 'text-green-600' : 'text-red-600'"
                             >
@@ -1613,7 +1617,7 @@
                             <td class="px-4 py-3 text-sm text-teal-800 text-right">
                                 ৳{{ toBengaliNumber(formatCurrency(productSummary.reduce((s, r) => s + r.total_revenue, 0)), 2) }}
                             </td>
-                            <td
+                            <td v-if="canSeeProfit"
                                 class="px-4 py-3 text-sm text-right"
                                 :class="productSummary.reduce((s, r) => s + r.total_profit, 0) >= 0 ? 'text-green-700' : 'text-red-700'"
                             >
@@ -1651,7 +1655,7 @@
                             <span class="text-xs text-gray-500">{{ getTranslation("totalRevenue") }}</span>
                             <span class="font-semibold text-gray-800">৳{{ toBengaliNumber(formatCurrency(row.total_revenue), 2) }}</span>
                         </div>
-                        <div class="flex flex-col">
+                        <div v-if="canSeeProfit" class="flex flex-col">
                             <span class="text-xs text-gray-500">{{ getTranslation("totalProfit") }}</span>
                             <span class="font-semibold" :class="row.total_profit >= 0 ? 'text-green-600' : 'text-red-600'">
                                 ৳{{ toBengaliNumber(formatCurrency(row.total_profit), 2) }}
@@ -1674,7 +1678,7 @@
                             <span class="text-xs text-teal-600 font-medium">{{ getTranslation("totalRevenue") }}</span>
                             <span class="font-bold text-teal-800">৳{{ toBengaliNumber(formatCurrency(productSummary.reduce((s, r) => s + r.total_revenue, 0)), 2) }}</span>
                         </div>
-                        <div class="flex flex-col">
+                        <div v-if="canSeeProfit" class="flex flex-col">
                             <span class="text-xs text-teal-600 font-medium">{{ getTranslation("totalProfit") }}</span>
                             <span
                                 class="font-bold"
@@ -1713,7 +1717,7 @@ interface SaleItem {
     extra_bottles?: number;
     quantity?: number;
     total_price: string | number;
-    profit: string | number;
+    profit?: string | number;
 }
 
 interface Sale {
@@ -1726,7 +1730,7 @@ interface Sale {
     total_amount: string | number;
     paid_amount?: string | number | null;
     due_amount?: string | number | null;
-    total_profit: string | number;
+    total_profit?: string | number;
     sale_date: string;
     status: string;
     items: SaleItem[];
@@ -1763,6 +1767,9 @@ const props = defineProps<{
     suppliers?: Supplier[];
     filters?: Filters;
     defaultView?: "invoice" | "product" | "summary";
+    // False when the user lacks sales.profit: profit and cost are left out of
+    // the data and every profit/cost figure on the page is hidden.
+    canSeeProfit?: boolean;
 }>();
 
 // Reactive data
@@ -1802,7 +1809,7 @@ const totalAmount = computed(() => {
 const totalProfit = computed(() => {
     return (
         tabbedSales.value.reduce(
-            (sum, sale) => sum + parseFloat(sale.total_profit.toString()),
+            (sum, sale) => sum + (parseFloat(String(sale.total_profit ?? 0)) || 0),
             0
         ) || 0
     );
@@ -1905,7 +1912,7 @@ const productSummary = computed(() => {
             entry.total_qty += item.total_bottles_sold || item.quantity || 0;
             entry.total_cases += item.cases_sold || 0;
             entry.total_revenue += parseFloat(item.total_price.toString()) || 0;
-            entry.total_profit += parseFloat(item.profit.toString()) || 0;
+            entry.total_profit += parseFloat(String(item.profit ?? 0)) || 0;
         }
     }
 

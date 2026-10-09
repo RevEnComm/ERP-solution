@@ -1403,7 +1403,7 @@ function saleFixture(array $liftOverrides = []): array
     $catalog  = makeCatalog($supplier);
     $liftUser = makeUser(['lift.add']);
     $saleUser = makeUser([
-        'sales.add', 'sales.update', 'sales.view', 'sales.delete',
+        'sales.add', 'sales.update', 'sales.view', 'sales.delete', 'sales.profit',
         'dashboard.view', 'inventory.view', 'lift.view', 'report.profit-loss',
     ]);
     $shop     = makeShop();
@@ -5063,4 +5063,32 @@ it('T201: sales access alone does not open the profit and loss page', function (
     $profitLoss = makeUser(['report.profit-loss']);
     $this->actingAs($profitLoss)->get(route('profit-loss.index'))->assertOk();
     $this->actingAs($profitLoss)->get(route('home'))->assertRedirect(route('profit-loss.index', absolute: false));
+});
+
+it('T202: without sales.profit the sales report carries no profit figures', function () {
+    [$supplier, $shop, $product, $user] = saleFixture();
+
+    $this->actingAs($user)->post(route('sales.store'), salePayload($supplier, $shop, $product, [
+        'cases_sold' => 2, 'total_bottles_to_sell' => 48,
+    ]))->assertRedirect();
+    $sale = salesOf($supplier)->firstOrFail();
+
+    $dsr = makeUser(['sales.view', 'sales.add', 'sales.update']);
+
+    foreach (['sales.report', 'sales.summary'] as $page) {
+        $props = $this->actingAs($dsr)->get(route($page))->viewData('page')['props'];
+        $row   = collect($props['sales'])->firstWhere('id', $sale->id);
+
+        expect($props['canSeeProfit'])->toBeFalse()
+            ->and($row)->not->toHaveKey('total_profit')
+            ->and(collect($row['items'])->every(fn ($item) => ! array_key_exists('profit', $item)))->toBeTrue();
+    }
+
+    $editItems = $this->actingAs($dsr)->get(route('sales.edit', $sale->id))->viewData('page')['props']['editSale']['items'];
+    expect(collect($editItems)->every(fn ($item) => ! array_key_exists('profit', $item) && ! array_key_exists('purchase_unit_price', $item)))->toBeTrue();
+
+    // The seller who has the permission still sees it.
+    $props = $this->actingAs($user)->get(route('sales.report'))->viewData('page')['props'];
+    expect($props['canSeeProfit'])->toBeTrue()
+        ->and(collect($props['sales'])->firstWhere('id', $sale->id))->toHaveKey('total_profit');
 });

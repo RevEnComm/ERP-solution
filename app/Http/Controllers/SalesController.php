@@ -16,6 +16,7 @@ use App\Http\Requests\StoreSalesRequest;
 use App\Models\Product;
 use App\Services\SmsService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
@@ -627,6 +628,8 @@ class SalesController extends Controller
             ];
         });
 
+        $canSeeProfit = auth()->user()->can('sales.profit');
+
         $latestPayment = DB::table('payments')->where('sale_id', $sale->id)->orderBy('payment_date', 'desc')->first();
 
         $editSaleData = [
@@ -645,8 +648,8 @@ class SalesController extends Controller
                 'payment_date' => $latestPayment->payment_date,
                 'status' => $latestPayment->status,
             ] : null,
-            'items' => $sale->items->map(function ($item) {
-                return [
+            'items' => $sale->items->map(function ($item) use ($canSeeProfit) {
+                $itemRow = [
                     'id' => $item->id,
                     'product_id' => $item->product_id,
                     'product_name' => $item->product?->name ?? 'Unknown',
@@ -669,6 +672,8 @@ class SalesController extends Controller
                     'price_per_case' => $item->selling_price_per_case,
                     'free_bottles_per_case' => (int) round(($item->free_bottles_sold ?? 0) / max($item->cases_sold, 1)),
                 ];
+
+                return $canSeeProfit ? $itemRow : Arr::except($itemRow, ['purchase_unit_price', 'profit']);
             })->values(),
         ];
 
@@ -1051,8 +1056,12 @@ class SalesController extends Controller
             $query->where('supplier_id', $request->supplier_id);
         }
 
-        $sales = $query->orderByDesc('sale_date')->orderByDesc('id')->get()->map(function ($sale) {
-            return [
+        // Without sales.profit the figures are left out of the page data, not
+        // just hidden on screen, so they can't be read from the browser either.
+        $canSeeProfit = $request->user()->can('sales.profit');
+
+        $sales = $query->orderByDesc('sale_date')->orderByDesc('id')->get()->map(function ($sale) use ($canSeeProfit) {
+            $row = [
                 'id' => $sale->id,
                 'shop_id' => $sale->shop_id,
                 'shop_name' => $sale->shop ? $sale->shop->shop_name : 'Unknown',
@@ -1065,8 +1074,8 @@ class SalesController extends Controller
                 'total_profit' => $sale->items->sum('profit'),
                 'sale_date' => $sale->sale_date->format('Y-m-d'),
                 'status' => $sale->status,
-                'items' => $sale->items->map(function ($item) {
-                    return [
+                'items' => $sale->items->map(function ($item) use ($canSeeProfit) {
+                    $itemRow = [
                         'product_id' => $item->product_id,
                         'product_name' => $item->product ? $item->product->name : 'Unknown',
                         'variant' => $item->variant,
@@ -1079,8 +1088,12 @@ class SalesController extends Controller
                         'total_price' => $item->total_price,
                         'profit' => $item->profit,
                     ];
+
+                    return $canSeeProfit ? $itemRow : Arr::except($itemRow, ['profit']);
                 }),
             ];
+
+            return $canSeeProfit ? $row : Arr::except($row, ['total_profit']);
         });
 
         $shops = $this->shopRepository->all()->map(function ($shop) {
@@ -1111,6 +1124,7 @@ class SalesController extends Controller
             'products' => $products,
             'suppliers' => $suppliers,
             'defaultView' => $defaultView,
+            'canSeeProfit' => $canSeeProfit,
             'filters' => [
                 'id' => $request->id,
                 'start_date' => $request->start_date,
